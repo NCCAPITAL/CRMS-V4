@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>CRMS / V3</title>
+
+<!-- iOS "Add to Home Screen" support -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="CRMS V3" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBCMEUxMSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTglIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjU0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI0Y1QzI0MiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UjwvdGV4dD48L3N2Zz4=" />
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: #0B0E11; }
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #E8ECEF;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .font-display { font-family: 'JetBrains Mono', monospace; }
+
+  input[type=number]::-webkit-inner-spin-button { opacity: 0; }
+  input, select { font-family: inherit; }
+  ::-webkit-scrollbar { height: 6px; width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #2A2F36; border-radius: 4px; }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  header.app-header {
+    border-bottom: 1px solid #1B1F24;
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(11,14,17,0.95);
+    backdrop-filter: blur(8px);
+    padding-top: env(safe-area-inset-top);
+  }
+  .header-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 18px 0 10px;
+  }
+  .eyebrow { font-size: 10px; letter-spacing: 0.25em; color: #6B7280; text-transform: uppercase; }
+  .h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #F5C242; margin: 2px 0 0; }
+  .h1 span { color: #E8ECEF; }
+  .cap-label { font-size: 10px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.1em; text-align: right; }
+  .cap-value { font-size: 18px; font-weight: 600; text-align: right; }
+
+  nav.tabs { display: flex; gap: 4px; }
+  nav.tabs button {
+    background: none; border: none; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: #6B7280; padding: 10px 16px;
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  nav.tabs button.active { color: #F5C242; border-color: #F5C242; }
+  nav.tabs button:not(.active):active { color: #9CA3AF; }
+
+  main { padding: 20px 0 60px; }
+
+  .section { margin-bottom: 20px; }
+  .section-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #F5C242; }
+  .dot.blue { background: #5B8DEF; }
+  .dot.green { background: #2FD480; }
+  .section-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.2em; color: #9CA3AF;
+  }
+  .card {
+    background: #12161B; border: 1px solid #1B1F24; border-radius: 10px; padding: 16px;
+  }
+
+  .grid { display: grid; gap: 12px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 480px) {
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  label.field { display: block; }
+  .field-label {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: #6B7280; margin-bottom: 6px;
+  }
+  .field-input-wrap {
+    display: flex; align-items: center; background: #0B0E11;
+    border: 1px solid #23272E; border-radius: 6px; padding: 0 12px;
+    transition: border-color .15s;
+  }
+  .field-input-wrap:focus-within { border-color: #F5C242; }
+  .field-input-wrap input, .field-input-wrap select {
+    width: 100%; background: transparent; border: none; outline: none;
+    color: #E8ECEF; font-size: 15px; padding: 11px 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .field-suffix { font-size: 12px; color: #6B7280; margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+  select { appearance: none; -webkit-appearance: none; }
+  .field-input-wrap.text input { font-family: 'Inter', sans-serif; }
+
+  .stat-block {
+    background: #0B0E11; border: 1px solid #1B1F24; border-radius: 8px; padding: 12px;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: #6B7280; margin-bottom: 4px;
+  }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; }
+  .pos { color: #2FD480; } .neg { color: #FF4D5E; } .warn { color: #F5C242; }
+
+  .rr-row {
+    margin-top: 12px; display: flex; align-items: center; justify-content: space-between;
+    background: #0B0E11; border: 1px solid #1B1F24; border-radius: 8px; padding: 12px 16px;
+  }
+  .rr-value { font-family: 'JetBrains Mono', monospace; font-size: 21px; font-weight: 700; }
+
+  .warning-line {
+    margin-top: 12px; display: flex; align-items: center; gap: 8px;
+    color: #FF4D5E; font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  }
+
+  .btn-primary {
+    margin-top: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #F5C242; color: #0B0E11; border: none; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 600; padding: 14px; cursor: pointer;
+  }
+  .btn-primary:active { background: #FFD566; }
+
+  .journal-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .btn-ghost {
+    display: flex; align-items: center; gap: 6px; background: none;
+    color: #F5C242; border: 1px solid #2A2F36; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.1em; padding: 8px 14px; cursor: pointer;
+  }
+  .btn-ghost:active { background: #1B1F24; }
+
+  .empty-state {
+    text-align: center; padding: 60px 16px; border: 1px dashed #23272E; border-radius: 10px;
+  }
+  .empty-title { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #6B7280; }
+  .empty-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4B5563; margin-top: 6px; }
+
+  .journal-card {
+    background: #12161B; border: 1px solid #1B1F24; border-radius: 10px; padding: 16px; margin-bottom: 12px;
+  }
+  .journal-card.glow-up { box-shadow: 0 0 0 1px rgba(47,212,128,0.25); }
+  .journal-card.glow-down { box-shadow: 0 0 0 1px rgba(255,77,94,0.25); }
+
+  .notes-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; }
+  .notes-row label { flex: 1; }
+  .notes-input {
+    width: 100%; background: #0B0E11; border: 1px solid #23272E; border-radius: 6px;
+    padding: 11px 12px; font-size: 14px; color: #E8ECEF; outline: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .notes-input:focus { border-color: #F5C242; }
+  .delete-btn {
+    margin-top: 22px; background: none; border: none; color: #6B7280; cursor: pointer; padding: 8px;
+  }
+  .delete-btn:active { color: #FF4D5E; }
+
+  .equity-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .equity-block .stat-label { margin-bottom: 4px; }
+  .equity-pnl { display: flex; align-items: center; gap: 6px; }
+
+  .save-toast {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(8px);
+    background: #1B1F24; border: 1px solid #2A2F36; color: #9CA3AF;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 8px 14px; border-radius: 20px; opacity: 0; transition: opacity .25s, transform .25s;
+    pointer-events: none; z-index: 50;
+  }
+  .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="wrap header-row">
+    <div>
+      <div class="eyebrow">Risk Terminal</div>
+      <h1 class="h1">CRMS<span>/V3</span></h1>
+    </div>
+    <div>
+      <div class="cap-label">Capital</div>
+      <div class="cap-value" id="headerCapital">$10,000</div>
+    </div>
+  </div>
+  <nav class="tabs wrap" id="tabs">
+    <button data-tab="calc" class="active">Calculator</button>
+    <button data-tab="journal">Journal</button>
+    <button data-tab="stats">Performance</button>
+  </nav>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<div class="save-toast" id="saveToast">Saved</div>
+
+<script>
+/* ---------- Storage ---------- */
+const STORE_KEY = "crms_v3_state";
+
+function defaultState() {
+  return {
+    account: { capital: 10000, riskPct: 1, maxDailyLossPct: 3 },
+    trade: { asset: "BTC", direction: "LONG", entry: 100000, stop: 97000, target: 109000, leverage: 5 },
+    entries: []
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    return Object.assign(defaultState(), parsed);
+  } catch (e) {
+    return defaultState();
+  }
+}
+
+let state = loadState();
+let saveTimer = null;
+
+function persist() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  const toast = document.getElementById("saveToast");
+  toast.classList.add("show");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => toast.classList.remove("show"), 900);
+}
+
+/* ---------- Helpers ---------- */
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function fmt(n, d = 2) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+function calcDerived() {
+  const a = state.account, t = state.trade;
+  const riskAmount = (a.capital * a.riskPct) / 100;
+  const slDistance = Math.abs(t.entry - t.stop);
+  const positionSize = slDistance > 0 ? riskAmount / slDistance : 0;
+  const positionValue = positionSize * t.entry;
+  const requiredMargin = t.leverage > 0 ? positionValue / t.leverage : 0;
+  const potentialProfit = Math.abs(t.target - t.entry) * positionSize;
+  const rr = riskAmount > 0 ? potentialProfit / riskAmount : 0;
+  const marginPctOfCapital = a.capital > 0 ? (requiredMargin / a.capital) * 100 : 0;
+  return { riskAmount, slDistance, positionSize, positionValue, requiredMargin, potentialProfit, rr, marginPctOfCapital };
+}
+
+function calcStats() {
+  const closed = state.entries.filter(e => e.exit !== "" && e.exit !== null && e.exit !== undefined);
+  const total = closed.length;
+  const wins = closed.filter(e => Number(e.pnl) > 0).length;
+  const winRate = total > 0 ? (wins / total) * 100 : 0;
+  const rrNums = closed.map(e => Number(e.rr)).filter(v => !Number.isNaN(v));
+  const avgRR = rrNums.length ? rrNums.reduce((x,y)=>x+y,0) / rrNums.length : 0;
+  const pnlNums = closed.map(e => Number(e.pnl)).filter(v => !Number.isNaN(v));
+  const best = pnlNums.length ? Math.max(...pnlNums) : 0;
+  const worst = pnlNums.length ? Math.min(...pnlNums) : 0;
+  const totalPnl = pnlNums.reduce((x,y)=>x+y,0);
+  const monthlyReturn = state.account.capital > 0 ? (totalPnl / state.account.capital) * 100 : 0;
+  return { total, winRate, avgRR, best, worst, totalPnl, monthlyReturn };
+}
+
+/* ---------- Render: Calculator ---------- */
+function renderCalc() {
+  const a = state.account, t = state.trade;
+  const c = calcDerived();
+  const riskBreach = a.riskPct > 2;
+  const stats = calcStats();
+  const dailyLossUsed = stats.totalPnl < 0 ? (Math.abs(stats.totalPnl) / a.capital) * 100 : 0;
+  const dailyLossBreach = dailyLossUsed >= a.maxDailyLossPct;
+  const isLong = t.direction === "LONG";
+
+  return `
+    <div class="section">
+      <div class="section-title-row"><span class="dot"></span><span class="section-title">Account Settings</span></div>
+      <div class="card">
+        <div class="grid grid-3">
+          ${field("acc-capital","Capital","number",a.capital,"USD")}
+          ${field("acc-risk","Max Risk / Trade","number",a.riskPct,"%")}
+          ${field("acc-dailyloss","Max Daily Loss","number",a.maxDailyLossPct,"%")}
+        </div>
+        ${riskBreach ? `<div class="warning-line">⚠ Risk per trade above 2% — most pros cap this at 1–2%.</div>` : ""}
+        ${dailyLossBreach ? `<div class="warning-line">⚠ Daily loss limit reached (${fmt(dailyLossUsed,1)}% used). Consider stopping for today.</div>` : ""}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title-row"><span class="dot blue"></span><span class="section-title">Trade Setup</span></div>
+      <div class="card">
+        <div class="grid grid-2" style="margin-bottom:12px;">
+          ${field("trade-asset","Asset","text",t.asset)}
+          ${select("trade-direction","Direction",t.direction,["LONG","SHORT"])}
+        </div>
+        <div class="grid grid-2" style="margin-bottom:12px;">
+          ${field("trade-entry","Entry Price","number",t.entry,"$")}
+          ${field("trade-leverage","Leverage","number",t.leverage,"x")}
+        </div>
+        <div class="grid grid-2">
+          ${field("trade-stop","Stop Loss","number",t.stop,"$")}
+          ${field("trade-target","Take Profit","number",t.target,"$")}
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title-row"><span class="dot green"></span><span class="section-title">Position Calculator</span></div>
+      <div class="card">
+        <div class="grid grid-3">
+          ${statBlock("Risk Amount", "$" + fmt(c.riskAmount))}
+          ${statBlock("SL Distance", "$" + fmt(c.slDistance))}
+          ${statBlock("Position Size", fmt(c.positionSize,5) + " " + t.asset)}
+          ${statBlock("Position Value", "$" + fmt(c.positionValue))}
+          ${statBlock("Required Margin", "$" + fmt(c.requiredMargin), c.marginPctOfCapital > 50 ? "neg" : "")}
+          ${statBlock("Potential Profit", "$" + fmt(c.potentialProfit), isLong ? "pos" : "neg")}
+        </div>
+        <div class="rr-row">
+          <div class="stat-label">Risk:Reward Ratio</div>
+          <div class="rr-value ${c.rr >= 2 ? 'pos' : c.rr >= 1 ? 'warn' : 'neg'}">1 : ${fmt(c.rr,2)}</div>
+        </div>
+        <button class="btn-primary" id="logTradeBtn">+ Log this trade to journal</button>
+      </div>
+    </div>
+  `;
+}
+
+function field(id, label, type, value, suffix) {
+  const inputType = type === "number" ? "number" : (type === "date" ? "date" : "text");
+  return `
+    <label class="field">
+      <span class="field-label">${label}</span>
+      <div class="field-input-wrap ${type === 'text' ? 'text' : ''}">
+        <input id="${id}" type="${inputType}" ${type==='number' ? 'step="any"' : ''} value="${value === null || value === undefined ? '' : value}" />
+        ${suffix ? `<span class="field-suffix">${suffix}</span>` : ""}
+      </div>
+    </label>
+  `;
+}
+
+function select(id, label, value, options) {
+  return `
+    <label class="field">
+      <span class="field-label">${label}</span>
+      <div class="field-input-wrap">
+        <select id="${id}">
+          ${options.map(o => `<option value="${o}" ${o===value?'selected':''}>${o}</option>`).join("")}
+        </select>
+      </div>
+    </label>
+  `;
+}
+
+function statBlock(label, value, accentClass) {
+  return `
+    <div class="stat-block">
+      <div class="stat-label">${label}</div>
+      <div class="stat-value ${accentClass || ''}">${value}</div>
+    </div>
+  `;
+}
+
+function bindCalcEvents() {
+  const a = state.account, t = state.trade;
+  const bindNum = (id, obj, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", () => {
+      obj[key] = Number(el.value);
+      persist();
+      rerenderInPlace();
+    });
+  };
+  const bindText = (id, obj, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", () => {
+      obj[key] = el.value;
+      persist();
+      rerenderInPlace();
+    });
+  };
+
+  bindNum("acc-capital", a, "capital");
+  bindNum("acc-risk", a, "riskPct");
+  bindNum("acc-dailyloss", a, "maxDailyLossPct");
+  bindText("trade-asset", t, "asset");
+  bindText("trade-direction", t, "direction");
+  bindNum("trade-entry", t, "entry");
+  bindNum("trade-leverage", t, "leverage");
+  bindNum("trade-stop", t, "stop");
+  bindNum("trade-target", t, "target");
+
+  const logBtn = document.getElementById("logTradeBtn");
+  if (logBtn) {
+    logBtn.addEventListener("click", () => {
+      state.entries.unshift({
+        id: uid(),
+        date: new Date().toISOString().slice(0,10),
+        asset: t.asset,
+        direction: t.direction,
+        entry: t.entry,
+        exit: "",
+        pnl: "",
+        rr: "",
+        notes: ""
+      });
+      persist();
+      setActiveTab("journal");
+    });
+  }
+}
+
+// Re-render only the dynamic stat areas to avoid losing focus while typing.
+// Simplicity wins on mobile: we re-render the whole calc view but preserve
+// focus by checking active element id before/after.
+function rerenderInPlace() {
+  const activeId = document.activeElement ? document.activeElement.id : null;
+  const selStart = document.activeElement && document.activeElement.selectionStart;
+  document.getElementById("main").innerHTML = renderCalc();
+  bindCalcEvents();
+  document.getElementById("headerCapital").textContent = "$" + fmt(state.account.capital, 0);
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) {
+      el.focus();
+      if (typeof selStart === "number" && el.setSelectionRange) {
+        try { el.setSelectionRange(selStart, selStart); } catch(e) {}
+      }
+    }
+  }
+}
+
+/* ---------- Render: Journal ---------- */
+function renderJournal() {
+  if (state.entries.length === 0) {
+    return `
+      <div class="journal-header-row">
+        <span class="section-title">Trade Journal</span>
+        <button class="btn-ghost" id="newEntryBtn">+ New Entry</button>
+      </div>
+      <div class="empty-state">
+        <div class="empty-title">No trades logged yet.</div>
+        <div class="empty-sub">Log a setup from the Calculator tab to start tracking.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="journal-header-row">
+      <span class="section-title">Trade Journal</span>
+      <button class="btn-ghost" id="newEntryBtn">+ New Entry</button>
+    </div>
+    ${state.entries.map(journalCard).join("")}
+  `;
+}
+
+function journalCard(e) {
+  const pnl = Number(e.pnl);
+  const positive = !Number.isNaN(pnl) && pnl > 0 && e.pnl !== "";
+  const negative = !Number.isNaN(pnl) && pnl < 0 && e.pnl !== "";
+  const glowClass = positive ? "glow-up" : negative ? "glow-down" : "";
+  return `
+    <div class="journal-card ${glowClass}" data-id="${e.id}">
+      <div class="grid grid-2" style="margin-bottom:12px;">
+        ${field("date-"+e.id, "Date", "date", e.date)}
+        ${field("asset-"+e.id, "Asset", "text", e.asset)}
+      </div>
+      <div class="grid grid-2" style="margin-bottom:12px;">
+        ${select("dir-"+e.id, "Side", e.direction, ["LONG","SHORT"])}
+        ${field("rr-"+e.id, "R:R", "number", e.rr)}
+      </div>
+      <div class="grid grid-3" style="margin-bottom:0;">
+        ${field("entry-"+e.id, "Entry", "number", e.entry, "$")}
+        ${field("exit-"+e.id, "Exit", "number", e.exit, "$")}
+        ${field("pnl-"+e.id, "P/L", "number", e.pnl, "$")}
+      </div>
+      <div class="notes-row">
+        <label class="field">
+          <span class="field-label">Notes</span>
+          <input class="notes-input" id="notes-${e.id}" type="text" value="${(e.notes||'').replace(/"/g,'&quot;')}" placeholder="Setup, lesson, mistake to avoid..." />
+        </label>
+        <button class="delete-btn" data-del="${e.id}" aria-label="Delete entry">🗑</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindJournalEvents() {
+  const newBtn = document.getElementById("newEntryBtn");
+  if (newBtn) {
+    newBtn.addEventListener("click", () => {
+      state.entries.unshift({
+        id: uid(), date: new Date().toISOString().slice(0,10),
+        asset: state.trade.asset, direction: state.trade.direction,
+        entry: state.trade.entry, exit: "", pnl: "", rr: "", notes: ""
+      });
+      persist();
+      rerenderJournalInPlace();
+    });
+  }
+
+  state.entries.forEach(e => {
+    const bind = (id, key, isNum) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", () => {
+        e[key] = isNum ? (el.value === "" ? "" : Number(el.value)) : el.value;
+        persist();
+      });
+    };
+    bind("date-"+e.id, "date", false);
+    bind("asset-"+e.id, "asset", false);
+    bind("dir-"+e.id, "direction", false);
+    bind("rr-"+e.id, "rr", true);
+    bind("entry-"+e.id, "entry", true);
+    bind("exit-"+e.id, "exit", true);
+    bind("pnl-"+e.id, "pnl", true);
+    bind("notes-"+e.id, "notes", false);
+  });
+
+  document.querySelectorAll("[data-del]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-del");
+      state.entries = state.entries.filter(e => e.id !== id);
+      persist();
+      rerenderJournalInPlace();
+    });
+  });
+}
+
+function rerenderJournalInPlace() {
+  document.getElementById("main").innerHTML = renderJournal();
+  bindJournalEvents();
+}
+
+/* ---------- Render: Stats ---------- */
+function renderStats() {
+  const s = calcStats();
+  const a = state.account;
+  const winClass = s.winRate >= 50 ? "pos" : "neg";
+  const pnlClass = s.totalPnl >= 0 ? "pos" : "neg";
+  return `
+    <div class="section">
+      <div class="section-title-row"><span class="dot"></span><span class="section-title">Trading Statistics</span></div>
+      <div class="card">
+        <div class="grid grid-3">
+          ${statBlock("Total Closed Trades", s.total)}
+          ${statBlock("Win Rate", fmt(s.winRate,1) + "%", winClass)}
+          ${statBlock("Average R:R", "1 : " + fmt(s.avgRR,2))}
+          ${statBlock("Best Trade", "$" + fmt(s.best), "pos")}
+          ${statBlock("Worst Trade", "$" + fmt(s.worst), "neg")}
+          ${statBlock("Net Return", fmt(s.monthlyReturn,2) + "%", pnlClass)}
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title-row"><span class="dot blue"></span><span class="section-title">Equity Snapshot</span></div>
+      <div class="card">
+        <div class="equity-row">
+          <div class="equity-block">
+            <div class="stat-label">Starting Capital</div>
+            <div class="stat-value">$${fmt(a.capital,0)}</div>
+          </div>
+          <div class="equity-pnl">
+            <div class="stat-value ${pnlClass}">${s.totalPnl>=0?'+':''}$${fmt(s.totalPnl)}</div>
+          </div>
+          <div class="equity-block" style="text-align:right;">
+            <div class="stat-label">Current Estimate</div>
+            <div class="stat-value">$${fmt(a.capital + s.totalPnl,0)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Tab control ---------- */
+let currentTab = "calc";
+
+function setActiveTab(tabId) {
+  currentTab = tabId;
+  document.querySelectorAll("#tabs button").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
+  });
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  const main = document.getElementById("main");
+  if (currentTab === "calc") {
+    main.innerHTML = renderCalc();
+    bindCalcEvents();
+  } else if (currentTab === "journal") {
+    main.innerHTML = renderJournal();
+    bindJournalEvents();
+  } else {
+    main.innerHTML = renderStats();
+  }
+  document.getElementById("headerCapital").textContent = "$" + fmt(state.account.capital, 0);
+}
+
+document.querySelectorAll("#tabs button").forEach(btn => {
+  btn.addEventListener("click", () => setActiveTab(btn.getAttribute("data-tab")));
+});
+
+/* ---------- Init ---------- */
+renderCurrentTab();
+</script>
+</body>
+</html>
